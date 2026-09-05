@@ -1,0 +1,6 @@
+{
+  "name": "AuthForge RBAC & Token Service",
+  "description": "Production RESTful User Auth Service with bcrypt (cost factor 12), 15-minute JWT, RBAC, Firebase Admin verification, Webhook Callback URLs, Worker Test Messaging & PWA/APK deployment.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
