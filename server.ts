@@ -6,6 +6,7 @@ import protectedRoutes from './src/server/routes/protected.routes.ts';
 import testRoutes from './src/server/routes/test.routes.ts';
 import { workerRouter } from './src/server/routes/worker.routes.ts';
 import { webhookRouter } from './src/server/routes/webhook.routes.ts';
+import { gitRouter } from './src/server/routes/git.routes.ts';
 
 async function startServer() {
   const app = express();
@@ -42,6 +43,7 @@ async function startServer() {
   app.use('/api/v1/tests', testRoutes);
   app.use('/api/v1/workers', workerRouter);
   app.use('/api/v1/webhooks', webhookRouter);
+  app.use('/api/v1/git', gitRouter);
 
   // Global Error Handler for API Routes
   app.use('/api/*', (err: any, req: Request, res: Response, _next: NextFunction) => {
