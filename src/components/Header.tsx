@@ -1,5 +1,5 @@
-import React from 'react';
-import { ShieldCheck, UserCheck, RefreshCw, KeyRound, Server } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { ShieldCheck, UserCheck, RefreshCw, KeyRound, Server, Wifi, WifiOff, Globe, Lock } from 'lucide-react';
 import { UserSession, AuthTokens } from '../types.ts';
 import { PWAInstallButton } from './PWAInstallButton.tsx';
 
@@ -20,6 +20,53 @@ export const Header: React.FC<HeaderProps> = ({
   isResetting,
   onOpenApkTab
 }) => {
+  const [isOnline, setIsOnline] = useState(typeof navigator !== 'undefined' ? navigator.onLine : true);
+  const [latencyMs, setLatencyMs] = useState<number | null>(null);
+
+  useEffect(() => {
+    const handleOnline = () => {
+      setIsOnline(true);
+      checkPing();
+    };
+    const handleOffline = () => {
+      setIsOnline(false);
+      setLatencyMs(null);
+    };
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    const checkPing = async () => {
+      if (!navigator.onLine) {
+        setIsOnline(false);
+        return;
+      }
+      const t0 = performance.now();
+      try {
+        const res = await fetch('/api/v1/health', { cache: 'no-store' });
+        if (res.ok) {
+          setIsOnline(true);
+          setLatencyMs(Math.round(performance.now() - t0));
+        } else {
+          setIsOnline(false);
+        }
+      } catch {
+        setIsOnline(false);
+      }
+    };
+
+    checkPing();
+    const interval = setInterval(checkPing, 15000);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+      clearInterval(interval);
+    };
+  }, []);
+
+  const activeScope = session?.scope || tokens?.scope || 'read write offline_access';
+
   return (
     <header className="border-b border-slate-200 bg-white sticky top-0 z-30 shadow-xs">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
@@ -33,20 +80,57 @@ export const Header: React.FC<HeaderProps> = ({
                 AuthForge Engine
               </h1>
               <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
-                Sandbox v1.0
+                Online &amp; Offline Sync
               </span>
             </div>
             <p className="text-xs text-slate-700 hidden sm:block">
-              RESTful JWT, RBAC &amp; Firebase Admin SDK Verification Sandbox
+              RESTful JWT, RBAC, Read/Write Scopes &amp; Live Internet Connectivity
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5 sm:gap-3">
+          {/* Live Internet Connectivity Badge */}
+          <div 
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium border transition-colors ${
+              isOnline 
+                ? 'bg-emerald-50 text-emerald-800 border-emerald-200' 
+                : 'bg-rose-50 text-rose-800 border-rose-200'
+            }`}
+            title={isOnline ? `Internet connection active${latencyMs ? ` (${latencyMs}ms ping)` : ''}` : 'No internet connection detected'}
+          >
+            {isOnline ? (
+              <>
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                <Wifi className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                <span className="hidden md:inline">Internet:</span>
+                <span className="font-semibold">{latencyMs ? `${latencyMs}ms` : 'Connected'}</span>
+              </>
+            ) : (
+              <>
+                <span className="w-2 h-2 rounded-full bg-rose-500"></span>
+                <WifiOff className="w-3.5 h-3.5 text-rose-600 shrink-0" />
+                <span>Offline</span>
+              </>
+            )}
+          </div>
+
+          {/* Active Granted Scope Badge */}
+          <div 
+            className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 bg-indigo-50 text-indigo-800 border border-indigo-200 rounded-lg text-xs"
+            title={`Active Access Scopes: ${activeScope}`}
+          >
+            <Lock className="w-3 h-3 text-indigo-600 shrink-0" />
+            <span className="text-slate-500 text-[11px]">Scope:</span>
+            <span className="font-mono font-semibold text-indigo-900">
+              {activeScope.includes('read') && activeScope.includes('write') ? 'read • write' : activeScope}
+            </span>
+          </div>
+
           {/* Server status */}
-          <div className="hidden md:flex items-center gap-1.5 px-2.5 py-1 bg-slate-100 rounded-lg text-xs font-mono text-slate-600 border border-slate-200">
+          <div className="hidden xl:flex items-center gap-1.5 px-2.5 py-1 bg-slate-100 rounded-lg text-xs font-mono text-slate-600 border border-slate-200">
             <Server className="w-3.5 h-3.5 text-slate-500" />
-            <span>Port 3000 (Active)</span>
+            <span>Port 3000</span>
           </div>
 
           {/* Active Session Info */}
@@ -75,7 +159,7 @@ export const Header: React.FC<HeaderProps> = ({
           ) : (
             <div className="flex items-center gap-2 text-xs font-medium text-slate-700 bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5">
               <KeyRound className="w-4 h-4 text-slate-500" />
-              <span>Unauthenticated</span>
+              <span className="hidden sm:inline">Unauthenticated</span>
             </div>
           )}
 
@@ -91,7 +175,7 @@ export const Header: React.FC<HeaderProps> = ({
             title="Reset repository to initial seeded principals"
           >
             <RefreshCw className={`w-3.5 h-3.5 text-slate-500 ${isResetting ? 'animate-spin' : ''}`} />
-            <span className="hidden sm:inline">Reset Seeds</span>
+            <span className="hidden sm:inline">Reset</span>
           </button>
         </div>
       </div>

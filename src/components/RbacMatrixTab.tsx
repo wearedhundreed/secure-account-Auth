@@ -33,14 +33,18 @@ const PERMISSIONS = [
   { id: 'reports:read', label: 'reports:read', desc: 'Access operational manager analytics' },
   { id: 'reports:export', label: 'reports:export', desc: 'Export compliance & finance data' },
   { id: 'audit:read', label: 'audit:read', desc: 'Inspect security and audit event logs' },
+  { id: 'data:read', label: 'data:read', desc: 'Read live internet data feeds' },
+  { id: 'data:write', label: 'data:write', desc: 'Commit and write records over internet' },
+  { id: 'files:read', label: 'files:read', desc: 'Read remote files & packages' },
+  { id: 'files:write', label: 'files:write', desc: 'Upload and write storage artifacts' },
   { id: 'system:admin', label: 'system:admin', desc: 'Full administrative engine privileges' },
 ];
 
 const ROLE_PERMISSIONS: Record<string, string[]> = {
-  admin: ['users:read', 'users:write', 'reports:read', 'reports:export', 'audit:read', 'system:admin'],
-  manager: ['users:read', 'reports:read', 'reports:export'],
-  auditor: ['users:read', 'reports:read', 'audit:read'],
-  user: ['users:read'],
+  admin: ['users:read', 'users:write', 'reports:read', 'reports:export', 'audit:read', 'data:read', 'data:write', 'files:read', 'files:write', 'system:admin'],
+  manager: ['users:read', 'reports:read', 'reports:export', 'data:read', 'data:write'],
+  auditor: ['users:read', 'reports:read', 'audit:read', 'data:read'],
+  user: ['users:read', 'data:read', 'data:write'],
 };
 
 export const RbacMatrixTab: React.FC<RbacMatrixTabProps> = ({

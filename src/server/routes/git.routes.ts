@@ -142,7 +142,7 @@ import zipfile, os
 
 with zipfile.ZipFile('${tempZipPath}', 'w', zipfile.ZIP_DEFLATED) as z:
     for root, dirs, files in os.walk('.'):
-        dirs[:] = [d for d in dirs if d not in ('node_modules', '.git', 'dist', 'build')]
+        dirs[:] = [d for d in dirs if d not in ('node_modules', '.git', 'dist', 'build', '.cache')]
         for f in files:
             p = os.path.join(root, f)
             z.write(p, os.path.relpath(p, '.'))
@@ -150,8 +150,9 @@ with zipfile.ZipFile('${tempZipPath}', 'w', zipfile.ZIP_DEFLATED) as z:
 
   try {
     await execAsync(`python3 -c "${pythonScript.replace(/"/g, '\\"')}"`);
+    res.setHeader('Content-Type', 'application/zip');
+    res.setHeader('Content-Disposition', 'attachment; filename="authforge-complete-bundle.zip"');
     res.download(tempZipPath, 'authforge-complete-bundle.zip', (err) => {
-      // Clean up temp file
       try {
         if (fs.existsSync(tempZipPath)) {
           fs.unlinkSync(tempZipPath);
@@ -166,6 +167,44 @@ with zipfile.ZipFile('${tempZipPath}', 'w', zipfile.ZIP_DEFLATED) as z:
       error: {
         code: 'ARCHIVE_ERROR',
         message: err.message || 'Failed to generate project zip bundle'
+      }
+    });
+  }
+});
+
+/**
+ * GET /api/v1/git/download-apk
+ * Downloads the compiled Android APK package (authforge-app-release.apk).
+ */
+gitRouter.get('/download-apk', async (req: Request, res: Response) => {
+  const publicApkPath = path.resolve(process.cwd(), 'public/downloads/authforge-app-release.apk');
+
+  try {
+    // If APK doesn't exist or is older than build script, regenerate it
+    if (!fs.existsSync(publicApkPath)) {
+      const buildScriptPath = path.resolve(process.cwd(), 'scripts/build-native-apk.sh');
+      if (fs.existsSync(buildScriptPath)) {
+        await execAsync(`bash "${buildScriptPath}"`);
+      }
+    }
+
+    if (!fs.existsSync(publicApkPath)) {
+      throw new Error('Native Android APK build artifact could not be created');
+    }
+
+    const stat = fs.statSync(publicApkPath);
+    res.setHeader('Content-Type', 'application/vnd.android.package-archive');
+    res.setHeader('Content-Disposition', 'attachment; filename="authforge-app-release.apk"');
+    res.setHeader('Content-Length', stat.size);
+    res.setHeader('Cache-Control', 'public, max-age=3600');
+    
+    return res.sendFile(publicApkPath);
+  } catch (err: any) {
+    res.status(500).json({
+      success: false,
+      error: {
+        code: 'APK_BUILD_ERROR',
+        message: err.message || 'Failed to generate APK package'
       }
     });
   }

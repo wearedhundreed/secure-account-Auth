@@ -15,20 +15,35 @@ export const CONFIG = {
       'reports:read',
       'reports:export',
       'system:admin',
-      'audit:read'
+      'audit:read',
+      'data:read',
+      'data:write',
+      'files:read',
+      'files:write'
     ],
     manager: [
       'users:read',
       'reports:read',
-      'reports:export'
+      'reports:export',
+      'data:read',
+      'data:write'
     ],
     auditor: [
       'users:read',
       'reports:read',
-      'audit:read'
+      'audit:read',
+      'data:read'
     ],
     user: [
-      'users:read'
+      'users:read',
+      'data:read',
+      'data:write'
     ]
-  } as Record<UserRole, Permission[]>
+  } as Record<UserRole, Permission[]>,
+  DEFAULT_ROLE_SCOPES: {
+    admin: 'read write offline_access admin:all data:read data:write files:read files:write',
+    manager: 'read write offline_access data:read data:write',
+    user: 'read write offline_access data:read data:write',
+    auditor: 'read offline_access audit:read data:read'
+  } as Record<UserRole, string>
 };

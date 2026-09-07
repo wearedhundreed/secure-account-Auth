@@ -8,7 +8,8 @@ import {
   FileCode2,
   Webhook,
   Radio,
-  Smartphone
+  Smartphone,
+  PlugZap
 } from 'lucide-react';
 import { TabType } from '../types.ts';
 
@@ -27,6 +28,7 @@ export const Navigation: React.FC<NavigationProps> = ({
 }) => {
   const tabs: { id: TabType; label: string; icon: React.FC<{ className?: string }>; badge?: string }[] = [
     { id: 'workbench', label: 'API Workbench', icon: Terminal },
+    { id: 'integrations', label: 'Integration Apps', icon: PlugZap, badge: '16 Active' },
     { id: 'jwt-inspector', label: 'JWT & Token Inspector', icon: Key },
     { id: 'firebase-oauth', label: 'OAuth & Firebase SDK', icon: ShieldAlert },
     { id: 'rbac-matrix', label: 'RBAC Matrix & Users', icon: Users },

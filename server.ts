@@ -7,6 +7,7 @@ import testRoutes from './src/server/routes/test.routes.ts';
 import { workerRouter } from './src/server/routes/worker.routes.ts';
 import { webhookRouter } from './src/server/routes/webhook.routes.ts';
 import { gitRouter } from './src/server/routes/git.routes.ts';
+import { integrationRouter } from './src/server/routes/integration.routes.ts';
 
 async function startServer() {
   const app = express();
@@ -28,11 +29,13 @@ async function startServer() {
   });
 
   // Health check endpoint
-  app.get('/api/health', (req, res) => {
+  app.get(['/api/health', '/api/v1/health'], (req, res) => {
     res.json({
       status: 'ok',
       service: 'AuthForge RBAC & Token Service',
       version: '1.0.0',
+      network: 'online_priority',
+      scopes: ['read', 'write', 'offline_access'],
       timestamp: new Date().toISOString()
     });
   });
@@ -44,6 +47,7 @@ async function startServer() {
   app.use('/api/v1/workers', workerRouter);
   app.use('/api/v1/webhooks', webhookRouter);
   app.use('/api/v1/git', gitRouter);
+  app.use('/api/v1/integrations', integrationRouter);
 
   // Global Error Handler for API Routes
   app.use('/api/*', (err: any, req: Request, res: Response, _next: NextFunction) => {

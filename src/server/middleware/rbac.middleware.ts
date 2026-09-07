@@ -80,3 +80,55 @@ export function requirePermission(...requiredPermissions: Permission[]) {
     next();
   };
 }
+
+/**
+ * Scope Guard:
+ * Ensures the authenticated Bearer token possesses the requested scopes (e.g., 'read', 'write').
+ * Supports wildcard '*' and 'admin:all' for administrator accounts.
+ */
+export function requireScope(...requiredScopes: string[]) {
+  return (req: Request, res: Response, next: NextFunction): void => {
+    if (!req.tokenPayload && !req.user) {
+      res.status(401).json({
+        success: false,
+        error: {
+          code: 'UNAUTHENTICATED',
+          message: 'Authentication required before verifying token scopes',
+          timestamp: new Date().toISOString()
+        }
+      });
+      return;
+    }
+
+    const rawScope = req.tokenPayload?.scope || req.user?.scope || '';
+    const grantedScopes = rawScope.split(/\s+/).filter(Boolean);
+
+    // If super-admin or wildcard scope is granted, permit access
+    if (grantedScopes.includes('*') || grantedScopes.includes('admin:all')) {
+      next();
+      return;
+    }
+
+    const missingScopes = requiredScopes.filter(scope => !grantedScopes.includes(scope));
+
+    if (missingScopes.length > 0) {
+      res.status(403).json({
+        success: false,
+        error: {
+          code: 'FORBIDDEN_SCOPE',
+          message: `Access denied. Token missing required scope: [${missingScopes.join(', ')}]. Granted scopes: '${rawScope}'`,
+          details: {
+            requiredScopes,
+            missingScopes,
+            grantedScopes
+          },
+          timestamp: new Date().toISOString()
+        }
+      });
+      return;
+    }
+
+    next();
+  };
+}
+

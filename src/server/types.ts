@@ -6,7 +6,11 @@ export type Permission =
   | 'reports:read' 
   | 'reports:export' 
   | 'system:admin' 
-  | 'audit:read';
+  | 'audit:read'
+  | 'data:read'
+  | 'data:write'
+  | 'files:read'
+  | 'files:write';
 
 export interface User {
   id: string;
@@ -15,6 +19,7 @@ export interface User {
   name: string;
   role: UserRole;
   permissions: Permission[];
+  scope?: string;
   authProvider: 'local' | 'firebase-google' | 'firebase-github';
   firebaseUid?: string;
   createdAt: string;
@@ -26,6 +31,7 @@ export interface JWTAccessTokenPayload {
   email: string;
   role: UserRole;
   permissions: Permission[];
+  scope: string; // e.g. "read write offline_access"
   type: 'access';
   iat?: number;
   exp?: number;
@@ -96,5 +102,24 @@ export interface WebhookLog {
   query: Record<string, any>;
   body: any;
   clientIp?: string;
+}
+
+export type IntegrationCategory = 'identity' | 'messaging' | 'security' | 'communications' | 'storage';
+
+export interface IntegrationApp {
+  id: string;
+  name: string;
+  category: IntegrationCategory;
+  description: string;
+  iconName: string;
+  enabled: boolean;
+  status: 'ENABLED' | 'DISABLED' | 'CONNECTING';
+  protocol: string;
+  endpoint: string;
+  health: 'HEALTHY' | 'SYNCED' | 'STANDBY';
+  latencyMs: number;
+  lastSynced: string;
+  features: string[];
+  config: Record<string, string>;
 }
 

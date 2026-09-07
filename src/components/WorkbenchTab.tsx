@@ -27,6 +27,7 @@ interface EndpointPreset {
   description: string;
   requiresAuth: boolean;
   requiredRole?: string;
+  requiredScope?: string;
   defaultBody?: any;
 }
 
@@ -42,7 +43,8 @@ const ENDPOINTS: EndpointPreset[] = [
       email: 'new.engineer@authforge.dev',
       password: 'SecurePassword123!',
       name: 'Morgan Blake',
-      role: 'user'
+      role: 'user',
+      scope: 'read write offline_access'
     }
   },
   {
@@ -74,6 +76,40 @@ const ENDPOINTS: EndpointPreset[] = [
     method: 'GET',
     path: '/api/v1/auth/me',
     description: 'Requires Bearer JWT. Returns authenticated profile and claims',
+    requiresAuth: true
+  },
+  {
+    id: 'data_read',
+    name: 'Data Feed (Scope: read)',
+    method: 'GET',
+    path: '/api/v1/protected/data-feed',
+    description: 'OAuth Scope Guard: Requires read scope. Fetches live data synced over internet',
+    requiresAuth: true,
+    requiredScope: 'read'
+  },
+  {
+    id: 'data_write',
+    name: 'Data Feed Write (Scope: write)',
+    method: 'POST',
+    path: '/api/v1/protected/data-feed',
+    description: 'OAuth Scope Guard: Requires write scope. Commits record to cloud over internet',
+    requiresAuth: true,
+    requiredScope: 'write',
+    defaultBody: {
+      title: 'Cloud Telemetry Record',
+      payload: {
+        channel: 'production-us-east',
+        syncedOverInternet: true,
+        scope: 'write'
+      }
+    }
+  },
+  {
+    id: 'internet_status',
+    name: 'Internet Online Check (Live)',
+    method: 'GET',
+    path: '/api/v1/protected/internet-status',
+    description: 'Live round-trip check: Pings remote DNS & confirms active internet connectivity',
     requiresAuth: true
   },
   {
@@ -283,11 +319,17 @@ export const WorkbenchTab: React.FC<WorkbenchTabProps> = ({
         </div>
 
         {/* Quick Session Stats */}
-        <div className="flex items-center gap-2 text-xs">
+        <div className="flex flex-wrap items-center gap-2 text-xs">
           <div className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2">
             <div className="text-slate-600 font-medium">Active Bearer Token</div>
-            <div className="font-mono text-slate-900 font-semibold truncate max-w-[180px]">
+            <div className="font-mono text-slate-900 font-semibold truncate max-w-[160px]">
               {tokens?.accessToken ? `${tokens.accessToken.substring(0, 16)}...` : 'None (Unset)'}
+            </div>
+          </div>
+          <div className="bg-indigo-50/70 border border-indigo-200 rounded-xl px-3 py-2">
+            <div className="text-indigo-700 font-medium">Granted Scopes</div>
+            <div className="font-mono text-indigo-900 font-semibold truncate max-w-[160px]">
+              {session?.scope || tokens?.scope || 'read write offline_access'}
             </div>
           </div>
         </div>
@@ -328,11 +370,18 @@ export const WorkbenchTab: React.FC<WorkbenchTabProps> = ({
                         {ep.name}
                       </span>
                     </div>
-                    {ep.requiredRole && (
-                      <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-purple-50 text-purple-700 border border-purple-200">
-                        {ep.requiredRole}
-                      </span>
-                    )}
+                    <div className="flex items-center gap-1">
+                      {ep.requiredRole && (
+                        <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-purple-50 text-purple-700 border border-purple-200">
+                          {ep.requiredRole}
+                        </span>
+                      )}
+                      {ep.requiredScope && (
+                        <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-200 font-semibold">
+                          scope:{ep.requiredScope}
+                        </span>
+                      )}
+                    </div>
                   </div>
                   <div className="font-mono text-[11px] text-slate-700 mt-1 truncate">
                     {ep.path}

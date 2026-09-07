@@ -3,11 +3,31 @@ export type TabType =
   | 'jwt-inspector' 
   | 'firebase-oauth' 
   | 'rbac-matrix' 
-  | 'test-suite' 
-  | 'architecture'
+  | 'integrations'
   | 'callback-hub'
   | 'worker-dispatcher'
-  | 'apk-deployment';
+  | 'apk-deployment'
+  | 'test-suite' 
+  | 'architecture';
+
+export type IntegrationCategory = 'identity' | 'messaging' | 'security' | 'communications' | 'storage';
+
+export interface IntegrationApp {
+  id: string;
+  name: string;
+  category: IntegrationCategory;
+  description: string;
+  iconName: string;
+  enabled: boolean;
+  status: 'ENABLED' | 'DISABLED' | 'CONNECTING';
+  protocol: string;
+  endpoint: string;
+  health: 'HEALTHY' | 'SYNCED' | 'STANDBY';
+  latencyMs: number;
+  lastSynced: string;
+  features: string[];
+  config: Record<string, string>;
+}
 
 export interface UserSession {
   id: string;
@@ -15,12 +35,14 @@ export interface UserSession {
   name: string;
   role: 'admin' | 'manager' | 'user' | 'auditor';
   permissions: string[];
+  scope?: string;
   authProvider: string;
 }
 
 export interface AuthTokens {
   accessToken: string;
   tokenType: string;
+  scope?: string;
   expiresIn: number;
   expiresInHuman: string;
   refreshToken?: string;

@@ -10,6 +10,7 @@ import { ArchitectureTab } from './components/ArchitectureTab.tsx';
 import { CallbackHubTab } from './components/CallbackHubTab.tsx';
 import { WorkerDispatcherTab } from './components/WorkerDispatcherTab.tsx';
 import { ApkDeploymentTab } from './components/ApkDeploymentTab.tsx';
+import { IntegrationsTab } from './components/IntegrationsTab.tsx';
 import { TabType, UserSession, AuthTokens, TestSuiteReport } from './types.ts';
 
 export default function App() {
@@ -164,6 +165,10 @@ export default function App() {
             tokens={tokens}
             onApplyTokens={handleApplyTokens}
           />
+        )}
+
+        {activeTab === 'integrations' && (
+          <IntegrationsTab />
         )}
 
         {activeTab === 'callback-hub' && (

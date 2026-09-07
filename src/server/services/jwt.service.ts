@@ -6,14 +6,17 @@ import { JWTAccessTokenPayload, RefreshTokenRecord, User } from '../types.ts';
 export class JwtService {
   /**
    * Generates a signed JWT Access Token with 15-minute expiration.
-   * Includes claims: sub, email, role, permissions, and type: 'access'.
+   * Includes claims: sub, email, role, permissions, scope (e.g. read write offline_access), and type: 'access'.
    */
-  public static signAccessToken(user: User): string {
+  public static signAccessToken(user: User, customScope?: string): string {
+    const scope = customScope || user.scope || CONFIG.DEFAULT_ROLE_SCOPES[user.role] || 'read write offline_access';
+
     const payload: Omit<JWTAccessTokenPayload, 'iat' | 'exp'> = {
       sub: user.id,
       email: user.email,
       role: user.role,
       permissions: user.permissions,
+      scope,
       type: 'access'
     };
 

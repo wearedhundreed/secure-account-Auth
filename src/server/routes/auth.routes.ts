@@ -52,6 +52,7 @@ router.post(
       const passwordHash = await PasswordService.hashPassword(password);
       const userRole = role || 'user';
       const permissions = [...CONFIG.DEFAULT_ROLE_PERMISSIONS[userRole]];
+      const scope = req.body.scope || CONFIG.DEFAULT_ROLE_SCOPES[userRole] || 'read write offline_access';
 
       const newUser: User = {
         id: `usr_${crypto.randomBytes(8).toString('hex')}`,
@@ -60,6 +61,7 @@ router.post(
         passwordHash,
         role: userRole,
         permissions,
+        scope,
         authProvider: 'local',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
@@ -80,6 +82,7 @@ router.post(
           tokens: {
             accessToken,
             tokenType: 'Bearer',
+            scope: newUser.scope,
             expiresIn: CONFIG.JWT_ACCESS_EXPIRES_IN_SECONDS,
             expiresInHuman: CONFIG.JWT_ACCESS_EXPIRES_IN_HUMAN,
             refreshToken: refreshTokenRecord.token,
@@ -148,6 +151,7 @@ router.post(
           tokens: {
             accessToken,
             tokenType: 'Bearer',
+            scope: user.scope || CONFIG.DEFAULT_ROLE_SCOPES[user.role] || 'read write offline_access',
             expiresIn: CONFIG.JWT_ACCESS_EXPIRES_IN_SECONDS,
             expiresInHuman: CONFIG.JWT_ACCESS_EXPIRES_IN_HUMAN,
             refreshToken: refreshTokenRecord.token,
@@ -242,6 +246,7 @@ router.post(
           tokens: {
             accessToken: newAccessToken,
             tokenType: 'Bearer',
+            scope: user.scope || CONFIG.DEFAULT_ROLE_SCOPES[user.role] || 'read write offline_access',
             expiresIn: CONFIG.JWT_ACCESS_EXPIRES_IN_SECONDS,
             expiresInHuman: CONFIG.JWT_ACCESS_EXPIRES_IN_HUMAN,
             refreshToken: newRefreshTokenRecord.token,
@@ -294,6 +299,7 @@ router.get(
           sub: req.tokenPayload?.sub,
           role: req.tokenPayload?.role,
           permissions: req.tokenPayload?.permissions,
+          scope: req.tokenPayload?.scope || req.user?.scope || 'read write offline_access',
           issuedAt: req.tokenPayload?.iat ? new Date(req.tokenPayload.iat * 1000).toISOString() : null,
           expiresAt: req.tokenPayload?.exp ? new Date(req.tokenPayload.exp * 1000).toISOString() : null,
           remainingSeconds: req.tokenPayload?.exp ? Math.max(0, req.tokenPayload.exp - Math.floor(Date.now() / 1000)) : 0
@@ -361,6 +367,7 @@ router.post(
           tokens: {
             accessToken,
             tokenType: 'Bearer',
+            scope: user.scope || CONFIG.DEFAULT_ROLE_SCOPES[user.role] || 'read write offline_access',
             expiresIn: CONFIG.JWT_ACCESS_EXPIRES_IN_SECONDS,
             expiresInHuman: CONFIG.JWT_ACCESS_EXPIRES_IN_HUMAN,
             refreshToken: refreshTokenRecord.token

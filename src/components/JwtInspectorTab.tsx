@@ -240,6 +240,7 @@ export const JwtInspectorTab: React.FC<JwtInspectorTabProps> = ({
             </pre>
             <div className="text-[11px] text-slate-700 space-y-1">
               <div>• <strong>Role:</strong> <span className="font-semibold text-slate-900">{parsed.payload.role}</span></div>
+              <div>• <strong>Scope:</strong> <span className="font-mono text-indigo-700 font-semibold">{parsed.payload.scope || 'read write offline_access'}</span></div>
               <div>• <strong>Permissions:</strong> {(parsed.payload.permissions || []).join(', ')}</div>
               <div>• <strong>TTL:</strong> 15 minutes (900s)</div>
             </div>
