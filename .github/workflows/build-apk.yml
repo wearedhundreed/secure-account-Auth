@@ -1,0 +1,55 @@
+name: Build & Release Android APK
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build-apk:
+    name: Build Native Android APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Setup Java JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Install Android Packaging Tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y aapt zipalign apksigner ecj
+
+      - name: Install Node Dependencies
+        run: npm install
+
+      - name: Build Web Application
+        run: npm run build
+
+      - name: Build & Sign Native Android APK
+        run: |
+          chmod +x scripts/build-native-apk.sh
+          ./scripts/build-native-apk.sh
+
+      - name: Verify Signed APK Artifact
+        run: |
+          ls -lh public/downloads/authforge-app-release.apk
+          apksigner verify --verbose public/downloads/authforge-app-release.apk
+
+      - name: Upload APK Release Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: authforge-release-apk
+          path: public/downloads/authforge-app-release.apk
+          if-no-files-found: error

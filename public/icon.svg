@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a" />
+      <stop offset="50%" stop-color="#1e1b4b" />
+      <stop offset="100%" stop-color="#0284c7" />
+    </linearGradient>
+    <linearGradient id="shieldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6366f1" />
+      <stop offset="100%" stop-color="#3b82f6" />
+    </linearGradient>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fbbf24" />
+      <stop offset="100%" stop-color="#f59e0b" />
+    </linearGradient>
+  </defs>
+
+  <!-- Background with rounded corners -->
+  <rect width="512" height="512" rx="112" fill="url(#bg)" />
+
+  <!-- Shield Base -->
+  <path d="M256 96 C336 96 384 136 384 216 C384 320 288 384 256 416 C224 384 128 320 128 216 C128 136 176 96 256 96 Z" 
+        fill="url(#shieldGrad)" opacity="0.95" />
+
+  <!-- Shield Highlight Inner -->
+  <path d="M256 128 C312 128 352 160 352 224 C352 304 280 356 256 380 C232 356 160 304 160 224 C160 160 200 128 256 128 Z" 
+        fill="#1e1b4b" opacity="0.85" />
+
+  <!-- Key Icon in Center -->
+  <circle cx="230" cy="220" r="36" fill="url(#goldGrad)" />
+  <circle cx="230" cy="220" r="18" fill="#1e1b4b" />
+  <path d="M256 230 L320 230 L320 260 L296 260 L296 248 L276 248 L276 260 L256 260 Z" fill="url(#goldGrad)" />
+
+  <!-- Signal / Worker Waves -->
+  <path d="M210 320 Q256 300 302 320" stroke="#38bdf8" stroke-width="8" stroke-linecap="round" fill="none" opacity="0.8" />
+  <path d="M190 344 Q256 316 322 344" stroke="#38bdf8" stroke-width="8" stroke-linecap="round" fill="none" opacity="0.5" />
+</svg>
