@@ -6,10 +6,34 @@
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
-  "orientation": "portrait-primary",
+  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
+  "orientation": "any",
   "background_color": "#0f172a",
   "theme_color": "#0f172a",
-  "categories": ["developer", "productivity", "utilities"],
+  "categories": ["developer", "productivity", "utilities", "security"],
+  "shortcuts": [
+    {
+      "name": "Antigravity AI Setup",
+      "short_name": "AI Setup",
+      "description": "1-Click Beginner Setup & Diagnostics",
+      "url": "/?tab=ai-automator",
+      "icons": [{ "src": "/pwa-192x192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Datadog & Integrations",
+      "short_name": "Integrations",
+      "description": "Datadog Data Center, Substack AI & Entra ID",
+      "url": "/?tab=integrations",
+      "icons": [{ "src": "/pwa-192x192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "API Workbench",
+      "short_name": "Workbench",
+      "description": "REST API Interactive Console",
+      "url": "/?tab=workbench",
+      "icons": [{ "src": "/pwa-192x192.png", "sizes": "192x192" }]
+    }
+  ],
   "icons": [
     {
       "src": "/pwa-192x192.png",

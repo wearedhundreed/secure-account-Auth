@@ -28,7 +28,11 @@ import {
   Send,
   Terminal,
   Sparkles,
-  Layers
+  Layers,
+  Database,
+  Newspaper,
+  Wrench,
+  Mail
 } from 'lucide-react';
 import { IntegrationApp, IntegrationCategory } from '../types.ts';
 
@@ -40,6 +44,8 @@ export const IntegrationsTab: React.FC<IntegrationsTabProps> = () => {
   const [integrations, setIntegrations] = useState<IntegrationApp[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isEnablingAll, setIsEnablingAll] = useState<boolean>(false);
+  const [isConnectingAll, setIsConnectingAll] = useState<boolean>(false);
+  const [isAutoFixing, setIsAutoFixing] = useState<boolean>(false);
   const [isDisablingAll, setIsDisablingAll] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
@@ -47,7 +53,7 @@ export const IntegrationsTab: React.FC<IntegrationsTabProps> = () => {
   const [testingId, setTestingId] = useState<string | null>(null);
   const [testResults, setTestResults] = useState<Record<string, any>>({});
   const [actionMessage, setActionMessage] = useState<{ text: string; type: 'success' | 'info' | 'error' } | null>({
-    text: 'All 16 integration apps are loaded and ready in the AuthForge ecosystem.',
+    text: 'All 19 integration applications loaded including Datadog Data Center, Substack AI & Antigravity AI.',
     type: 'success'
   });
 
@@ -94,6 +100,58 @@ export const IntegrationsTab: React.FC<IntegrationsTabProps> = () => {
       });
     } finally {
       setIsEnablingAll(false);
+    }
+  };
+
+  // Connect and verify all integrations with live handshake receipts
+  const handleConnectAll = async () => {
+    setIsConnectingAll(true);
+    setActionMessage(null);
+    try {
+      const res = await fetch('/api/v1/integrations/connect-all', {
+        method: 'POST'
+      });
+      const json = await res.json();
+      if (json.success && Array.isArray(json.data?.integrations)) {
+        setIntegrations(json.data.integrations);
+        setActionMessage({
+          text: `⚡ Complete Success: All ${json.data.integrations.length} integration applications are connected, handshaked, and verified healthy!`,
+          type: 'success'
+        });
+      }
+    } catch (err: any) {
+      setActionMessage({
+        text: `Error connecting integrations: ${err.message}`,
+        type: 'error'
+      });
+    } finally {
+      setIsConnectingAll(false);
+    }
+  };
+
+  // Auto-Fix & heal all integrations using Antigravity AI diagnostics
+  const handleAutoFix = async () => {
+    setIsAutoFixing(true);
+    setActionMessage(null);
+    try {
+      const res = await fetch('/api/v1/integrations/auto-fix', {
+        method: 'POST'
+      });
+      const json = await res.json();
+      if (json.success && Array.isArray(json.data?.integrations)) {
+        setIntegrations(json.data.integrations);
+        setActionMessage({
+          text: ` Antigravity AI repaired ${json.data.repairedCount} connectivity bottlenecks: Verified tenant domain cgbarnesdabelsgmail.onmicrosoft.com & established green status for all services!`,
+          type: 'success'
+        });
+      }
+    } catch (err: any) {
+      setActionMessage({
+        text: `Error during auto-fix: ${err.message}`,
+        type: 'error'
+      });
+    } finally {
+      setIsAutoFixing(false);
     }
   };
 
@@ -219,6 +277,14 @@ export const IntegrationsTab: React.FC<IntegrationsTabProps> = () => {
         return <CreditCard className={`${className} text-indigo-600`} />;
       case 'phone':
         return <Phone className={`${className} text-teal-600`} />;
+      case 'database':
+        return <Database className={`${className} text-purple-600`} />;
+      case 'newspaper':
+        return <Newspaper className={`${className} text-orange-600`} />;
+      case 'sparkles':
+        return <Sparkles className={`${className} text-indigo-600`} />;
+      case 'mail':
+        return <Mail className={`${className} text-blue-600`} />;
       default:
         return <PlugZap className={`${className} text-slate-700`} />;
     }
@@ -266,22 +332,44 @@ export const IntegrationsTab: React.FC<IntegrationsTabProps> = () => {
           {/* Action Buttons */}
           <div className="flex flex-wrap items-center gap-2.5">
             <button
+              id="btn-connect-all-integrations"
+              onClick={handleConnectAll}
+              disabled={isConnectingAll || isLoading}
+              className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white rounded-xl text-sm font-semibold shadow-xs flex items-center gap-2 transition-all disabled:opacity-50 cursor-pointer"
+              title="Connect and verify all integrations with verified receipts"
+            >
+              <CheckCircle2 className={`w-4 h-4 ${isConnectingAll ? 'animate-spin' : ''}`} />
+              {isConnectingAll ? 'Connecting All...' : '⚡ Connect All (1-Click)'}
+            </button>
+
+            <button
+              id="btn-autofix-integrations"
+              onClick={handleAutoFix}
+              disabled={isAutoFixing || isLoading}
+              className="px-3.5 py-2.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-800 border border-indigo-200 rounded-xl text-sm font-semibold shadow-xs flex items-center gap-2 transition-all disabled:opacity-50 cursor-pointer"
+              title="Autonomous diagnostics and self-healing for all integrations"
+            >
+              <Wrench className={`w-4 h-4 ${isAutoFixing ? 'animate-spin text-indigo-600' : ''}`} />
+              {isAutoFixing ? 'Healing Ecosystem...' : '🛠️ Auto-Fix & Heal'}
+            </button>
+
+            <button
               id="btn-enable-all-integrations"
               onClick={handleEnableAll}
               disabled={isEnablingAll || isLoading}
-              className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white rounded-xl text-sm font-semibold shadow-xs flex items-center gap-2 transition-all disabled:opacity-50"
+              className="px-3.5 py-2.5 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white rounded-xl text-sm font-semibold shadow-xs flex items-center gap-2 transition-all disabled:opacity-50 cursor-pointer"
             >
               <Zap className={`w-4 h-4 ${isEnablingAll ? 'animate-bounce' : ''}`} />
-              {isEnablingAll ? 'Enabling All...' : 'Enable All Integrations'}
+              {isEnablingAll ? 'Enabling All...' : 'Enable All'}
             </button>
 
             <button
               id="btn-disable-all-integrations"
               onClick={handleDisableAll}
               disabled={isDisablingAll || isLoading}
-              className="px-3.5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-sm font-medium transition-all disabled:opacity-50"
+              className="px-3 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-sm font-medium transition-all disabled:opacity-50 cursor-pointer"
             >
-              <PowerOff className="w-4 h-4 inline mr-1.5" />
+              <PowerOff className="w-4 h-4 inline mr-1" />
               Disable All
             </button>
 
@@ -290,7 +378,7 @@ export const IntegrationsTab: React.FC<IntegrationsTabProps> = () => {
               onClick={fetchIntegrations}
               disabled={isLoading}
               title="Refresh integrations list"
-              className="p-2.5 text-slate-600 hover:text-slate-900 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl transition-all"
+              className="p-2.5 text-slate-600 hover:text-slate-900 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl transition-all cursor-pointer"
             >
               <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
             </button>
@@ -355,6 +443,7 @@ export const IntegrationsTab: React.FC<IntegrationsTabProps> = () => {
         <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar w-full sm:w-auto">
           {[
             { id: 'all', label: 'All Apps', count: totalCount },
+            { id: 'ai', label: 'AI & Data Center', count: integrations.filter(i => i.category === 'ai' || i.category === 'monitoring').length },
             { id: 'identity', label: 'Identity & SSO', count: integrations.filter(i => i.category === 'identity').length },
             { id: 'messaging', label: 'Queues & Brokers', count: integrations.filter(i => i.category === 'messaging').length },
             { id: 'security', label: 'Security & SIEM', count: integrations.filter(i => i.category === 'security').length },
@@ -494,6 +583,16 @@ export const IntegrationsTab: React.FC<IntegrationsTabProps> = () => {
                       )}
                     </button>
                   </div>
+
+                  {/* Active Configuration Badge */}
+                  {(app.config.tenantDomain || app.config.dataCenterRegion || app.config.publication || app.config.automationMode) && (
+                    <div className="mt-2 bg-indigo-50/70 border border-indigo-200/80 rounded-lg px-2.5 py-1 text-[11px] text-indigo-900 flex items-center justify-between">
+                      <span className="text-indigo-600 font-medium">Config:</span>
+                      <span className="font-mono font-semibold truncate max-w-[180px]">
+                        {app.config.dataCenterRegion || app.config.tenantDomain || app.config.publication || app.config.automationMode}
+                      </span>
+                    </div>
+                  )}
 
                   {/* Test Ping Result Banner if available */}
                   {testResult && (

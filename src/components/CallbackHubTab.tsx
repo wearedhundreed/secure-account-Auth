@@ -11,11 +11,13 @@ import {
   ShieldCheck, 
   Terminal,
   Clock,
-  Layers
+  Layers,
+  Mail
 } from 'lucide-react';
 
 interface CallbackHubTabProps {
   userEmail?: string;
+  onNavigateTab?: (tab: any) => void;
 }
 
 interface WebhookLogItem {
@@ -29,7 +31,10 @@ interface WebhookLogItem {
   clientIp?: string;
 }
 
-export const CallbackHubTab: React.FC<CallbackHubTabProps> = ({ userEmail = 'weare@dhundreed.com' }) => {
+export const CallbackHubTab: React.FC<CallbackHubTabProps> = ({ 
+  userEmail = 'weare@dhundreed.com',
+  onNavigateTab
+}) => {
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [logs, setLogs] = useState<WebhookLogItem[]>([]);
   const [isLoadingLogs, setIsLoadingLogs] = useState<boolean>(false);
@@ -167,11 +172,22 @@ export const CallbackHubTab: React.FC<CallbackHubTabProps> = ({ userEmail = 'wea
           </p>
         </div>
 
-        <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl p-2.5 px-3">
-          <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-          <span className="text-xs font-mono text-slate-700">
-            Listener Active on Port 3000
-          </span>
+        <div className="flex items-center gap-3">
+          {onNavigateTab && (
+            <button
+              onClick={() => onNavigateTab('sendgrid-dispatcher')}
+              className="px-3 py-2 text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow-xs flex items-center gap-1.5 transition-colors cursor-pointer"
+            >
+              <Mail className="w-4 h-4" />
+              <span>Email via SendGrid</span>
+            </button>
+          )}
+          <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl p-2 px-3">
+            <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="text-xs font-mono text-slate-700">
+              Listener Port 3000
+            </span>
+          </div>
         </div>
       </div>
 

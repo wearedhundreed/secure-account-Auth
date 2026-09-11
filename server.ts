@@ -8,6 +8,9 @@ import { workerRouter } from './src/server/routes/worker.routes.ts';
 import { webhookRouter } from './src/server/routes/webhook.routes.ts';
 import { gitRouter } from './src/server/routes/git.routes.ts';
 import { integrationRouter } from './src/server/routes/integration.routes.ts';
+import { aiRouter } from './src/server/routes/ai-automator.routes.ts';
+import { windowsRouter } from './src/server/routes/windows.routes.ts';
+import { sendgridRouter } from './src/server/routes/sendgrid.routes.ts';
 
 async function startServer() {
   const app = express();
@@ -48,6 +51,24 @@ async function startServer() {
   app.use('/api/v1/webhooks', webhookRouter);
   app.use('/api/v1/git', gitRouter);
   app.use('/api/v1/integrations', integrationRouter);
+  app.use('/api/v1/ai', aiRouter);
+  app.use('/api/v1/windows', windowsRouter);
+  app.use('/api/v1/sendgrid', sendgridRouter);
+
+  // Direct APK download routes and static package downloads
+  app.get(['/download-apk', '/apk'], (req, res) => {
+    res.redirect('/api/v1/git/download-apk');
+  });
+
+  app.use('/downloads', express.static(path.join(process.cwd(), 'public/downloads'), {
+    maxAge: '1h',
+    setHeaders: (res, filePath) => {
+      if (filePath.endsWith('.apk')) {
+        res.setHeader('Content-Type', 'application/vnd.android.package-archive');
+        res.setHeader('Content-Disposition', 'attachment; filename="authforge-app-v1.2.0-release.apk"');
+      }
+    }
+  }));
 
   // Global Error Handler for API Routes
   app.use('/api/*', (err: any, req: Request, res: Response, _next: NextFunction) => {

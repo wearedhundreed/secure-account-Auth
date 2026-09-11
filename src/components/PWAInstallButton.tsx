@@ -11,7 +11,21 @@ export const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({ onOpenMobile
   const { isInstallable, isInstalled, isIOS, install } = usePWAInstall();
   const [showIOSGuide, setShowIOSGuide] = useState(false);
   const [showInstallMenu, setShowInstallMenu] = useState(false);
-  const [downloading, setDownloading] = useState<'apk' | 'zip' | null>(null);
+  const [downloading, setDownloading] = useState<'apk' | 'zip' | 'win11-bat' | 'win11-ps1' | null>(null);
+
+  // Direct Windows 11 batch installer download
+  const handleDownloadWin11Bat = async () => {
+    setDownloading('win11-bat');
+    await triggerFileDownload('/api/v1/windows/download-bat', 'Install-AuthForge-Win11.bat');
+    setTimeout(() => setDownloading(null), 1200);
+  };
+
+  // Direct Windows 11 PowerShell installer download
+  const handleDownloadWin11Ps1 = async () => {
+    setDownloading('win11-ps1');
+    await triggerFileDownload('/api/v1/windows/download-ps1', 'install-authforge-win11.ps1');
+    setTimeout(() => setDownloading(null), 1200);
+  };
 
   // Direct APK download from modal
   const handleDownloadApk = async () => {
@@ -139,6 +153,50 @@ export const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({ onOpenMobile
             </div>
 
             <div className="space-y-3">
+              {/* Option 0: Samsung Windows 11 64-Bit Laptop Installer */}
+              <div className="p-3.5 bg-sky-50/80 border border-sky-200 rounded-xl space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-sky-950 flex items-center gap-1.5">
+                    <Sparkles className="w-4 h-4 text-sky-600" />
+                    Samsung Laptop / Windows 11 (64-Bit)
+                  </span>
+                  <span className="text-[10px] font-mono uppercase bg-sky-200 text-sky-800 px-1.5 py-0.5 rounded font-bold">
+                    Win 11 x64
+                  </span>
+                </div>
+                <p className="text-xs text-sky-900">
+                  Installs AuthForge as a dedicated borderless Windows 11 desktop app with Start Menu &amp; Taskbar shortcuts.
+                </p>
+                <div className="grid grid-cols-2 gap-2 pt-1">
+                  <button
+                    id="btn-modal-download-win11-bat"
+                    onClick={handleDownloadWin11Bat}
+                    disabled={downloading !== null}
+                    className="py-1.5 px-2.5 bg-sky-600 hover:bg-sky-700 text-white text-xs font-bold rounded-lg shadow-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50"
+                  >
+                    {downloading === 'win11-bat' ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    ) : (
+                      <Download className="w-3.5 h-3.5" />
+                    )}
+                    <span>1-Click .BAT</span>
+                  </button>
+                  <button
+                    id="btn-modal-download-win11-ps1"
+                    onClick={handleDownloadWin11Ps1}
+                    disabled={downloading !== null}
+                    className="py-1.5 px-2.5 bg-white hover:bg-sky-50 text-sky-800 border border-sky-300 text-xs font-bold rounded-lg shadow-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50"
+                  >
+                    {downloading === 'win11-ps1' ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    ) : (
+                      <Download className="w-3.5 h-3.5" />
+                    )}
+                    <span>PowerShell .ps1</span>
+                  </button>
+                </div>
+              </div>
+
               {/* Option 1: Direct APK Download */}
               <div className="p-3.5 bg-emerald-50/70 border border-emerald-200 rounded-xl space-y-2">
                 <div className="flex items-center justify-between">

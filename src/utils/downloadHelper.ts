@@ -58,20 +58,19 @@ export async function triggerFileDownload(
   } catch (error: any) {
     console.warn('Fetch download failed or was interrupted:', error);
     
-    // Attempt direct hidden iframe / anchor fallback before navigating away
+    // Attempt direct download via anchor tag without opening disruptive blank tab
     try {
       const a = document.createElement('a');
       a.href = url;
       a.download = filename;
-      a.target = '_blank';
-      a.rel = 'noopener noreferrer';
+      a.style.display = 'none';
       document.body.appendChild(a);
       a.click();
       setTimeout(() => {
         if (document.body.contains(a)) document.body.removeChild(a);
-      }, 1000);
+      }, 2000);
       
-      if (onProgress) onProgress('ready', `Download request dispatched: ${filename}`);
+      if (onProgress) onProgress('ready', `Download dispatched: ${filename}`);
       return true;
     } catch (fallbackError: any) {
       if (onProgress) onProgress('error', `Download error: ${error.message || 'Network error'}`);

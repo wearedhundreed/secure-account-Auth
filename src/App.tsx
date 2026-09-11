@@ -11,10 +11,21 @@ import { CallbackHubTab } from './components/CallbackHubTab.tsx';
 import { WorkerDispatcherTab } from './components/WorkerDispatcherTab.tsx';
 import { ApkDeploymentTab } from './components/ApkDeploymentTab.tsx';
 import { IntegrationsTab } from './components/IntegrationsTab.tsx';
+import { AiAutomatorTab } from './components/AiAutomatorTab.tsx';
+import { SendGridDispatcherTab } from './components/SendGridDispatcherTab.tsx';
 import { TabType, UserSession, AuthTokens, TestSuiteReport } from './types.ts';
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<TabType>('workbench');
+  const [activeTab, setActiveTab] = useState<TabType>(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const tabParam = params.get('tab') as TabType;
+      if (tabParam && ['workbench', 'integrations', 'ai-automator', 'jwt-inspector', 'firebase-oauth', 'rbac-matrix', 'test-suite', 'architecture', 'callback-hub', 'worker-dispatcher', 'sendgrid-dispatcher', 'apk-deployment'].includes(tabParam)) {
+        return tabParam;
+      }
+    }
+    return 'ai-automator';
+  });
   const [session, setSession] = useState<UserSession | null>(null);
   const [tokens, setTokens] = useState<AuthTokens | null>(null);
   const [testReport, setTestReport] = useState<TestSuiteReport | null>(null);
@@ -137,6 +148,10 @@ export default function App() {
       />
 
       <main className="flex-1 pb-16">
+        {activeTab === 'ai-automator' && (
+          <AiAutomatorTab />
+        )}
+
         {activeTab === 'workbench' && (
           <WorkbenchTab
             session={session}
@@ -172,7 +187,11 @@ export default function App() {
         )}
 
         {activeTab === 'callback-hub' && (
-          <CallbackHubTab userEmail="weare@dhundreed.com" />
+          <CallbackHubTab userEmail="weare@dhundreed.com" onNavigateTab={setActiveTab} />
+        )}
+
+        {activeTab === 'sendgrid-dispatcher' && (
+          <SendGridDispatcherTab userEmail="weare@dhundreed.com" />
         )}
 
         {activeTab === 'worker-dispatcher' && (

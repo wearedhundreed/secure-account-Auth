@@ -20,7 +20,7 @@ export interface User {
   role: UserRole;
   permissions: Permission[];
   scope?: string;
-  authProvider: 'local' | 'firebase-google' | 'firebase-github';
+  authProvider: 'local' | 'firebase-google' | 'firebase-github' | 'microsoft';
   firebaseUid?: string;
   createdAt: string;
   updatedAt: string;
@@ -104,7 +104,7 @@ export interface WebhookLog {
   clientIp?: string;
 }
 
-export type IntegrationCategory = 'identity' | 'messaging' | 'security' | 'communications' | 'storage';
+export type IntegrationCategory = 'identity' | 'messaging' | 'security' | 'communications' | 'storage' | 'ai' | 'monitoring';
 
 export interface IntegrationApp {
   id: string;

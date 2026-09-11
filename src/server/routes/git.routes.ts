@@ -173,44 +173,54 @@ with zipfile.ZipFile('${tempZipPath}', 'w', zipfile.ZIP_DEFLATED) as z:
 });
 
 /**
- * GET /api/v1/git/download-apk
- * Downloads the compiled Android APK package (authforge-app-release.apk).
+ * GET and HEAD /api/v1/git/download-apk
+ * Downloads the compiled native Android APK package (authforge-app-v1.2.0-release.apk).
  */
-gitRouter.get('/download-apk', async (req: Request, res: Response) => {
-  const publicApkPath = path.resolve(process.cwd(), 'public/downloads/authforge-app-release.apk');
+const handleApkDownload = (req: Request, res: Response) => {
+  const possiblePaths = [
+    path.resolve(process.cwd(), 'public/downloads/authforge-app-release.apk'),
+    path.resolve(process.cwd(), 'dist/downloads/authforge-app-release.apk'),
+    path.resolve('/tmp/authforge-app-release.apk')
+  ];
 
-  try {
-    // If APK doesn't exist or is older than build script, regenerate it
-    if (!fs.existsSync(publicApkPath)) {
-      const buildScriptPath = path.resolve(process.cwd(), 'scripts/build-native-apk.sh');
-      if (fs.existsSync(buildScriptPath)) {
-        await execAsync(`bash "${buildScriptPath}"`);
-      }
-    }
+  const apkPath = possiblePaths.find(p => fs.existsSync(p));
 
-    if (!fs.existsSync(publicApkPath)) {
-      throw new Error('Native Android APK build artifact could not be created');
-    }
-
-    const stat = fs.statSync(publicApkPath);
-    return res.sendFile(publicApkPath, {
-      maxAge: 0,
-      headers: {
-        'Content-Type': 'application/vnd.android.package-archive',
-        'Content-Disposition': 'attachment; filename="authforge-app-v1.2.0-release.apk"',
-        'Content-Length': String(stat.size),
-        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0',
-        'Pragma': 'no-cache',
-        'Expires': '0'
-      }
-    });
-  } catch (err: any) {
-    res.status(500).json({
+  if (!apkPath) {
+    res.status(404).json({
       success: false,
       error: {
-        code: 'APK_BUILD_ERROR',
-        message: err.message || 'Failed to generate APK package'
+        code: 'APK_NOT_FOUND',
+        message: 'Android APK package is currently not available on disk.'
       }
     });
+    return;
   }
-});
+
+  const stat = fs.statSync(apkPath);
+  res.setHeader('Content-Type', 'application/vnd.android.package-archive');
+  res.setHeader('Content-Disposition', 'attachment; filename="authforge-app-v1.2.0-release.apk"');
+  res.setHeader('Content-Length', String(stat.size));
+  res.setHeader('Accept-Ranges', 'bytes');
+  res.setHeader('Cache-Control', 'public, max-age=3600, must-revalidate');
+
+  if (req.method === 'HEAD') {
+    res.status(200).end();
+    return;
+  }
+
+  res.sendFile(apkPath, (err) => {
+    if (err && !res.headersSent) {
+      console.error('Error sending APK file:', err);
+      res.status(500).json({
+        success: false,
+        error: {
+          code: 'FILE_STREAM_ERROR',
+          message: 'Failed to stream Android APK package'
+        }
+      });
+    }
+  });
+};
+
+gitRouter.get('/download-apk', handleApkDownload);
+gitRouter.head('/download-apk', handleApkDownload);

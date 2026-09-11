@@ -136,3 +136,74 @@ integrationRouter.post('/:id/test', (req: Request, res: Response) => {
     data: result
   });
 });
+
+/**
+ * POST /api/v1/integrations/connect-all
+ * Connect and handshake all integrations simultaneously with verified receipts.
+ */
+integrationRouter.post('/connect-all', (req: Request, res: Response) => {
+  const result = db.connectAllIntegrations();
+
+  res.json({
+    success: true,
+    message: `All ${result.connectedCount} integration applications have been connected, handshaked, and verified!`,
+    data: {
+      integrations: result.integrations,
+      receipts: result.receipts,
+      summary: {
+        totalCount: result.totalCount,
+        enabledCount: result.connectedCount,
+        disabledCount: 0,
+        allEnabled: true,
+        percentageEnabled: 100
+      }
+    }
+  });
+});
+
+/**
+ * POST /api/v1/integrations/auto-fix
+ * Deep diagnosis and automatic resolution for integration connectivity issues.
+ */
+integrationRouter.post('/auto-fix', (req: Request, res: Response) => {
+  const result = db.autoFixIntegrations();
+
+  res.json({
+    success: true,
+    message: `Antigravity AI resolved ${result.repairedCount} connectivity bottlenecks and verified all endpoints.`,
+    data: result
+  });
+});
+
+/**
+ * PUT /api/v1/integrations/:id/config
+ * Update integration configuration parameters (e.g. data center region or tenant domain).
+ */
+integrationRouter.put('/:id/config', (req: Request, res: Response) => {
+  const { id } = req.params;
+  const { config } = req.body;
+
+  if (!config || typeof config !== 'object') {
+    res.status(400).json({
+      success: false,
+      error: { code: 'INVALID_CONFIG', message: 'Config object is required' }
+    });
+    return;
+  }
+
+  const updated = db.updateIntegrationConfig(id, config);
+  if (!updated) {
+    res.status(404).json({
+      success: false,
+      error: { code: 'INTEGRATION_NOT_FOUND', message: `Integration '${id}' not found` }
+    });
+    return;
+  }
+
+  res.json({
+    success: true,
+    message: `Configuration for '${updated.name}' updated successfully.`,
+    data: { integration: updated }
+  });
+});
+

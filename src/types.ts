@@ -1,4 +1,5 @@
 export type TabType = 
+  | 'ai-automator'
   | 'workbench' 
   | 'jwt-inspector' 
   | 'firebase-oauth' 
@@ -6,11 +7,12 @@ export type TabType =
   | 'integrations'
   | 'callback-hub'
   | 'worker-dispatcher'
+  | 'sendgrid-dispatcher'
   | 'apk-deployment'
   | 'test-suite' 
   | 'architecture';
 
-export type IntegrationCategory = 'identity' | 'messaging' | 'security' | 'communications' | 'storage';
+export type IntegrationCategory = 'identity' | 'messaging' | 'security' | 'communications' | 'storage' | 'ai';
 
 export interface IntegrationApp {
   id: string;

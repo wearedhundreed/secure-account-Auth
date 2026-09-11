@@ -9,7 +9,9 @@ import {
   Webhook,
   Radio,
   Smartphone,
-  PlugZap
+  PlugZap,
+  Sparkles,
+  Mail
 } from 'lucide-react';
 import { TabType } from '../types.ts';
 
@@ -26,15 +28,17 @@ export const Navigation: React.FC<NavigationProps> = ({
   testPassCount,
   testTotalCount
 }) => {
-  const tabs: { id: TabType; label: string; icon: React.FC<{ className?: string }>; badge?: string }[] = [
+  const tabs: { id: TabType; label: string; icon: React.FC<{ className?: string }>; badge?: string; highlight?: boolean }[] = [
+    { id: 'ai-automator', label: 'Antigravity AI Setup', icon: Sparkles, badge: '1-Click Setup', highlight: true },
     { id: 'workbench', label: 'API Workbench', icon: Terminal },
-    { id: 'integrations', label: 'Integration Apps', icon: PlugZap, badge: '16 Active' },
+    { id: 'integrations', label: 'Integration Apps', icon: PlugZap, badge: '20 Active' },
     { id: 'jwt-inspector', label: 'JWT & Token Inspector', icon: Key },
     { id: 'firebase-oauth', label: 'OAuth & Firebase SDK', icon: ShieldAlert },
     { id: 'rbac-matrix', label: 'RBAC Matrix & Users', icon: Users },
     { id: 'callback-hub', label: 'Callback URLs', icon: Webhook },
+    { id: 'sendgrid-dispatcher', label: 'SendGrid Email', icon: Mail, badge: 'Urgent Dispatch' },
     { id: 'worker-dispatcher', label: 'Worker Messaging', icon: Radio, badge: 'Fleet' },
-    { id: 'apk-deployment', label: 'GitHub & APK', icon: Smartphone, badge: 'APK' },
+    { id: 'apk-deployment', label: 'Android APK & Windows', icon: Smartphone, badge: 'APK Ready' },
     { 
       id: 'test-suite', 
       label: 'Test Suite', 
@@ -58,7 +62,9 @@ export const Navigation: React.FC<NavigationProps> = ({
               className={`flex items-center gap-2 px-3 py-2 text-xs sm:text-sm font-medium rounded-lg whitespace-nowrap transition-all ${
                 isActive
                   ? 'bg-white text-slate-900 shadow-xs border border-slate-200/80 font-semibold'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
+                  : tab.highlight
+                    ? 'text-indigo-700 bg-indigo-50/80 border border-indigo-200/60 hover:bg-indigo-100/70'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
               }`}
             >
               <Icon className={`w-4 h-4 ${isActive ? 'text-indigo-600' : 'text-slate-400'}`} />

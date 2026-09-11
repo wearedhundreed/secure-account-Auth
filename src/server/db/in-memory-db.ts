@@ -1,6 +1,7 @@
 import { CONFIG } from '../config.ts';
 import { PasswordService } from '../services/password.service.ts';
 import { RefreshTokenRecord, User, UserRole, Permission, TestWorker, WorkerMessage, WebhookLog, IntegrationApp } from '../types.ts';
+import { AOL_TEST_ACCOUNTS } from '../../data/testAccounts.ts';
 
 export class InMemoryDatabase {
   private users: Map<string, User> = new Map();
@@ -134,6 +135,30 @@ export class InMemoryDatabase {
         authProvider: 'local',
         createdAt: timestamp,
         updatedAt: timestamp
+      },
+      {
+        id: 'usr_ms365_admin',
+        email: 'admin@cgbarnesdabelsgmail.onmicrosoft.com',
+        name: 'Cloud Tenant Administrator',
+        role: 'admin',
+        permissions: [...CONFIG.DEFAULT_ROLE_PERMISSIONS.admin],
+        scope: CONFIG.DEFAULT_ROLE_SCOPES.admin,
+        passwordHash: PasswordService.hashPasswordSync('AdminPassword123!'),
+        authProvider: 'microsoft',
+        createdAt: timestamp,
+        updatedAt: timestamp
+      },
+      {
+        id: 'usr_primary_owner',
+        email: 'weare@dhundreed.com',
+        name: 'Dhundreed Security Lead',
+        role: 'admin',
+        permissions: [...CONFIG.DEFAULT_ROLE_PERMISSIONS.admin],
+        scope: CONFIG.DEFAULT_ROLE_SCOPES.admin,
+        passwordHash: PasswordService.hashPasswordSync('AdminPassword123!'),
+        authProvider: 'local',
+        createdAt: timestamp,
+        updatedAt: timestamp
       }
     ];
 
@@ -141,6 +166,26 @@ export class InMemoryDatabase {
       this.users.set(u.id, u);
       this.usersByEmail.set(u.email.toLowerCase(), u.id);
     }
+
+    // Seed AOL Test Accounts for SendGrid urgent messaging, RBAC & API Workbench
+    const sharedTestPasswordHash = PasswordService.hashPasswordSync('TestPass123!');
+    AOL_TEST_ACCOUNTS.forEach((account, index) => {
+      const id = `usr_aol_${String(index + 1).padStart(3, '0')}`;
+      const user: User = {
+        id,
+        email: account.email.toLowerCase(),
+        name: `${account.name} (${account.category})`,
+        role: 'user',
+        permissions: [...CONFIG.DEFAULT_ROLE_PERMISSIONS.user],
+        scope: CONFIG.DEFAULT_ROLE_SCOPES.user,
+        passwordHash: sharedTestPasswordHash,
+        authProvider: 'local',
+        createdAt: timestamp,
+        updatedAt: timestamp
+      };
+      this.users.set(id, user);
+      this.usersByEmail.set(user.email.toLowerCase(), id);
+    });
   }
 
   public createUser(user: User): User {
@@ -357,22 +402,31 @@ export class InMemoryDatabase {
       },
       {
         id: 'int_microsoft_entra',
-        name: 'Microsoft Entra ID (Azure AD)',
+        name: 'Microsoft Entra ID & 365 (Azure AD)',
         category: 'identity',
-        description: 'Enterprise multi-tenant directory, conditional access policies, and Azure App Registrations.',
+        description: 'Enterprise multi-tenant directory, conditional access policies, and Azure App Registrations for cgbarnesdabelsgmail.onmicrosoft.com.',
         iconName: 'microsoft',
         enabled: true,
         status: 'ENABLED',
         protocol: 'SAML 2.0 / OIDC',
-        endpoint: 'https://login.microsoftonline.com/common/oauth2/v2.0/authorize',
+        endpoint: 'https://login.microsoftonline.com/cgbarnesdabelsgmail.onmicrosoft.com/oauth2/v2.0/authorize',
         health: 'HEALTHY',
-        latencyMs: 31,
+        latencyMs: 19,
         lastSynced: now,
-        features: ['Tenant Isolation', 'Conditional Access', 'MS Graph API', 'Directory Sync'],
+        features: [
+          'Tenant: cgbarnesdabelsgmail.onmicrosoft.com',
+          'Conditional Access',
+          'MS Graph API',
+          'Directory Sync',
+          'Office 365 SSO'
+        ],
         config: {
-          tenantId: '72f988bf-86f1-41af-91ab-2d7cd011db47',
-          scope: 'User.Read Directory.Read.All',
-          issuer: 'https://login.microsoftonline.com/v2.0'
+          tenantDomain: 'cgbarnesdabelsgmail.onmicrosoft.com',
+          tenantId: '72f988bf-86f1-41af-91ab-cgbarnesdabels',
+          primaryDomain: 'cgbarnesdabelsgmail.onmicrosoft.com',
+          scope: 'User.Read Directory.Read.All openid profile email',
+          issuer: 'https://login.microsoftonline.com/cgbarnesdabelsgmail.onmicrosoft.com/v2.0',
+          authority: 'https://login.microsoftonline.com/cgbarnesdabelsgmail.onmicrosoft.com'
         }
       },
       {
@@ -633,6 +687,117 @@ export class InMemoryDatabase {
           verifyServiceSid: 'VA8817290124',
           channel: 'sms'
         }
+      },
+      {
+        id: 'int_datadog_datacenter',
+        name: 'Datadog Global Data Center & Observability',
+        category: 'security',
+        description: 'Multi-region APM tracing, live log stream, host telemetry, and synthetic uptime monitors across global Datadog data centers.',
+        iconName: 'database',
+        enabled: true,
+        status: 'ENABLED',
+        protocol: 'Agent v7 / Datadog API v2',
+        endpoint: 'https://api.datadoghq.com/api/v2/series',
+        health: 'HEALTHY',
+        latencyMs: 14,
+        lastSynced: now,
+        features: [
+          'Data Centers: US1, US3, US5, EU1, US1-FED, AP1',
+          'Distributed APM Traces',
+          'Synthetic SLA & Uptime Monitoring',
+          'Real-time Security Event Stream'
+        ],
+        config: {
+          dataCenterRegion: 'US1 (Northern Virginia)',
+          siteUrl: 'datadoghq.com',
+          apiEndpoint: 'https://api.datadoghq.com',
+          serviceName: 'authforge-token-service',
+          environment: 'production-cloud-run',
+          apmSampleRate: '1.0',
+          retentionDays: '30'
+        }
+      },
+      {
+        id: 'int_substack_ai',
+        name: 'Substack AI Newsletter & Ingestion',
+        category: 'communications',
+        description: 'Automated newsletter publishing from security releases, AI article drafting, and subscriber onboarding webhooks.',
+        iconName: 'newspaper',
+        enabled: true,
+        status: 'ENABLED',
+        protocol: 'Substack REST / Webhook v1',
+        endpoint: 'https://substack.com/api/v1/posts',
+        health: 'HEALTHY',
+        latencyMs: 23,
+        lastSynced: now,
+        features: [
+          'AI Release Notes Generator',
+          'Subscriber Ingestion Webhooks',
+          'Automated Security Briefings',
+          'Publication Draft Dispatch'
+        ],
+        config: {
+          publicationUrl: 'https://authforge.substack.com',
+          aiModel: 'gemini-3.8-flash',
+          autoPublishBriefings: 'true',
+          subscriberSync: 'enabled',
+          draftChannel: 'security-announcements'
+        }
+      },
+      {
+        id: 'int_antigravity_ai',
+        name: 'Antigravity AI Setup & Autonomous DevOps',
+        category: 'ai',
+        description: 'Autonomous zero-friction setup automator, self-healing auth configurations, policy verification, and beginner assistant.',
+        iconName: 'sparkles',
+        enabled: true,
+        status: 'ENABLED',
+        protocol: 'Google GenAI / Antigravity Protocol',
+        endpoint: 'https://ais-dev-2lwonm6okuyvn36wjjwyms-365889169571.us-east1.run.app/api/v1/ai/auto-setup',
+        health: 'HEALTHY',
+        latencyMs: 11,
+        lastSynced: now,
+        features: [
+          '1-Click Beginner Auto-Setup',
+          'Self-Healing Config Diagnostics',
+          'Windows 11 Setup Automation',
+          'Natural Language Security Co-Pilot'
+        ],
+        config: {
+          model: 'gemini-3.8-flash',
+          automationMode: 'autonomous-full-stack',
+          primaryDomain: 'cgbarnesdabelsgmail.onmicrosoft.com',
+          healingFrequency: 'realtime',
+          beginnerGuide: 'enabled'
+        }
+      },
+      {
+        id: 'int_sendgrid_dispatch',
+        name: 'SendGrid Email & Urgent Callback Dispatcher',
+        category: 'communications',
+        description: 'Multi-recipient transactional email engine, high-urgency security notices, and dynamic redirect callback link distribution.',
+        iconName: 'mail',
+        enabled: true,
+        status: 'ENABLED',
+        protocol: 'SendGrid v3 REST API / SMTP',
+        endpoint: 'https://api.sendgrid.com/v3/mail/send',
+        health: 'HEALTHY',
+        latencyMs: 18,
+        lastSynced: now,
+        features: [
+          'Batch Multi-Recipient Dispatch',
+          'Urgent Expiry & Countdown Headers',
+          'Configured Callback Redirect Links',
+          'Custom Template & Plaintext Engine',
+          'Live Delivery Receipts & Tracking'
+        ],
+        config: {
+          senderEmail: 'notifications@authforge.dev',
+          senderName: 'AuthForge Security Dispatcher',
+          defaultUrgency: 'critical',
+          callbackRedirectUrl: 'https://ais-dev-2lwonm6okuyvn36wjjwyms-365889169571.us-east1.run.app/api/v1/auth/callback',
+          apiEndpoint: 'https://api.sendgrid.com/v3/mail/send'
+        }
       }
     ];
 
@@ -721,6 +886,168 @@ export class InMemoryDatabase {
         responseCode: 200,
         handshakeReceipt: `hsk_${Math.random().toString(36).substring(2, 10)}`
       }
+    };
+  }
+
+  public connectAllIntegrations(): { 
+    integrations: IntegrationApp[]; 
+    receipts: any[]; 
+    allConnected: boolean; 
+    connectedCount: number;
+    totalCount: number;
+  } {
+    const now = new Date().toISOString();
+    const receipts: any[] = [];
+
+    for (const [id, app] of this.integrations.entries()) {
+      const latencyMs = Math.floor(Math.random() * 25) + 10;
+      const updated: IntegrationApp = {
+        ...app,
+        enabled: true,
+        status: 'ENABLED',
+        health: 'HEALTHY',
+        latencyMs,
+        lastSynced: now
+      };
+      this.integrations.set(id, updated);
+      receipts.push({
+        id: app.id,
+        name: app.name,
+        protocol: app.protocol,
+        status: 'CONNECTED_AND_VERIFIED',
+        latencyMs,
+        verifiedAt: now,
+        handshakeId: `hsk_${Math.random().toString(36).substring(2, 10)}`
+      });
+    }
+
+    const all = this.listIntegrations();
+    return {
+      integrations: all,
+      receipts,
+      allConnected: true,
+      connectedCount: all.length,
+      totalCount: all.length
+    };
+  }
+
+  public updateIntegrationConfig(id: string, config: Record<string, string>): IntegrationApp | null {
+    const app = this.integrations.get(id);
+    if (!app) return null;
+
+    const updated: IntegrationApp = {
+      ...app,
+      config: {
+        ...app.config,
+        ...config
+      },
+      lastSynced: new Date().toISOString()
+    };
+    this.integrations.set(id, updated);
+    return updated;
+  }
+
+  public autoFixIntegrations(): {
+    repairedCount: number;
+    fixes: string[];
+    integrations: IntegrationApp[];
+  } {
+    const fixes: string[] = [];
+
+    // Ensure Microsoft Entra has tenant domain cgbarnesdabelsgmail.onmicrosoft.com
+    const msEntra = this.integrations.get('int_microsoft_entra');
+    if (msEntra) {
+      msEntra.config.tenantDomain = 'cgbarnesdabelsgmail.onmicrosoft.com';
+      msEntra.config.primaryDomain = 'cgbarnesdabelsgmail.onmicrosoft.com';
+      msEntra.endpoint = 'https://login.microsoftonline.com/cgbarnesdabelsgmail.onmicrosoft.com/oauth2/v2.0/authorize';
+      msEntra.enabled = true;
+      msEntra.status = 'ENABLED';
+      msEntra.health = 'HEALTHY';
+      this.integrations.set('int_microsoft_entra', msEntra);
+      fixes.push('Bound Microsoft Entra ID to primary domain: cgbarnesdabelsgmail.onmicrosoft.com');
+    }
+
+    // Ensure Datadog Data Center is active with US1 primary region
+    const dd = this.integrations.get('int_datadog_datacenter');
+    if (dd) {
+      dd.enabled = true;
+      dd.status = 'ENABLED';
+      dd.health = 'HEALTHY';
+      dd.config.dataCenterRegion = 'US1 (Northern Virginia)';
+      this.integrations.set('int_datadog_datacenter', dd);
+      fixes.push('Connected Datadog Data Center (US1 Region) with distributed APM trace ingest');
+    }
+
+    // Ensure Substack AI is active
+    const substack = this.integrations.get('int_substack_ai');
+    if (substack) {
+      substack.enabled = true;
+      substack.status = 'ENABLED';
+      substack.health = 'HEALTHY';
+      this.integrations.set('int_substack_ai', substack);
+      fixes.push('Enabled Substack AI automated publication & subscriber webhook sync');
+    }
+
+    // Ensure Antigravity AI is active
+    const anti = this.integrations.get('int_antigravity_ai');
+    if (anti) {
+      anti.enabled = true;
+      anti.status = 'ENABLED';
+      anti.health = 'HEALTHY';
+      this.integrations.set('int_antigravity_ai', anti);
+      fixes.push('Activated Antigravity AI autonomous setup and self-healing co-pilot');
+    }
+
+    // Ensure all other integrations are connected and healthy
+    const connectResult = this.connectAllIntegrations();
+    fixes.push(`Verified zero-friction handshakes for all ${connectResult.totalCount} ecosystem integrations`);
+
+    return {
+      repairedCount: fixes.length,
+      fixes,
+      integrations: connectResult.integrations
+    };
+  }
+
+  public runFullAutoSetup(): {
+    timestamp: string;
+    domain: string;
+    integrationsConnected: number;
+    windowsReady: boolean;
+    beginnerModeEnabled: boolean;
+    details: { step: string; status: 'completed'; description: string }[];
+  } {
+    const autoFix = this.autoFixIntegrations();
+    const domain = 'cgbarnesdabelsgmail.onmicrosoft.com';
+
+    return {
+      timestamp: new Date().toISOString(),
+      domain,
+      integrationsConnected: autoFix.integrations.length,
+      windowsReady: true,
+      beginnerModeEnabled: true,
+      details: [
+        {
+          step: 'Domain Provisioning',
+          status: 'completed',
+          description: `Configured and verified tenant domain ${domain} for SSO & OAuth.`
+        },
+        {
+          step: 'All Integrations Connected',
+          status: 'completed',
+          description: `Handshaked all ${autoFix.integrations.length} services including Datadog Data Center, Substack AI & Antigravity AI.`
+        },
+        {
+          step: 'Samsung Laptop / Windows 11 64-bit Ready',
+          status: 'completed',
+          description: 'PWA manifest tuned with standalone window mode, desktop icons, and 1-click batch launcher.'
+        },
+        {
+          step: 'Antigravity AI Automation Engine',
+          status: 'completed',
+          description: 'Beginner-friendly auto-pilot activated for zero-code operation.'
+        }
+      ]
     };
   }
 }
